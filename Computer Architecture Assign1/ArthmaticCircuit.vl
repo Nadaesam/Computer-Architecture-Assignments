@@ -1,0 +1,129 @@
+// building the multiplexer as in the book.
+module multiplexer(output y, input I0, input I1, input I2, input I3, input s0, input s1);
+wire notS0, notS1 ,m0, m1, m2, m3;
+not (notS0, s0); not (notS1, s1);
+and(m0, I0, notS0, notS1);
+and(m1, I1, s0, notS1);
+and(m2, I2, notS0, s1);
+and(m3, I3, s0, s1);
+or(y, m0, m1, m2, m3);
+endmodule
+// building the half adder to use it in full adder
+module half_adder(output sum, output carry, input a, input b);
+xor(sum, a, b);
+and(carry, a, b);
+endmodule
+// building the full adder
+module full_adder(output sum, output carry, input x, input y, input z);
+wire s1, c1, c2;
+half_adder h1(s1, c1, x, y);
+half_adder h2(sum, c2, s1, z);
+or(carry, c1, c2);
+endmodule
+/* to build the circuit we need 3 multiplexers because input a and b is 3-bits , need three full adders to add 'A' and 'B' and carry 
+we can't input 'A' in full adder directly becuase case '-B' so we make a combinational circuit if selections is '1 1' make 'A = 0' else don't change 'A'*/
+//  we use here 15 components 3 4 * 1 mux and 3 full adders and 5, not gate and 3 and gate
+module ArithmaticCircuit (output [2:0] G,output  finalcarry, input [2:0] B, input [2:0] A, input s0, input s1);
+// wire to store output A from combinational circuit
+wire [2:0] w;
+// output carry from full adder
+wire [1:0] carry;
+// final carry from third full adder -> overflow dependent on final carry
+wire finalcarry ;
+// multiplexer inputs 
+// convert B to get B complement
+not(notB0, B[0]);
+not(notB1, B[1]);
+not(notB2, B[2]);
+not(notS0, s0);
+not (notS1, s1);
+/*The combinational circuit is converting s0, s1 then 'or'  them then the output will be the input in and gate with A 
+so if s0 s1 is 11 case -B the output from or is 0 so the output from and will be zero also so the input in full adder will be 0, -B*/
+or(selction,notS0,notS1);
+and(A0,selction,A[0]);
+and(A1,selction,A[1]);
+and(A2,selction,A[2]);
+
+multiplexer m0(w[0],1'b1,notB0, B[0], notB0, s0, s1);
+multiplexer m1(w[1],1'b1,notB1, B[1], notB1, s0, s1);
+multiplexer m2(w[2],1'b1,notB2, B[2], notB2, s0, s1);  
+// we need input to carry to be 0 case selections is 0 and 1 and to be 1 case selection 2 3 because -b = B'+1 so we notice that the carry will be as same s0
+full_adder f1(G[0], carry[0], A0, w[0], s0);
+full_adder f2(G[1], carry[1], A1, w[1], carry[0]);
+full_adder f3(G[2], finalcarry, A2, w[2], carry[1]);
+endmodule
+/* another circuit we use here 12 components but we use 6 4 * 1 mux and 3 full adder and 3 not gate
+module ArithmaticCircuit (output [2:0] G,output  final carry, input [2:0] B, input [2:0] A, input s0, input s1);
+but 3 4 * 1 mux will make delay greater than 5 logic gates*/
+// module ArithmaticCircuit (output [2:0] G,output  finalcarry, input [2:0] B, input [2:0] A, input s0, input s1);
+// wire [2:0] w;
+// wire [1:0] carry;
+// wire finalcarry ;
+// wire [2:0] sum;
+// multiplexer mx0(A0 ,A[0],A[0],A[0],1'b0,s0 ,s1);
+// multiplexer mx1(A1 ,A[1],A[1],A[1],1'b0,s0,s1);
+// multiplexer mx2(A2 ,A[2],A[2],A[2],1'b0,s0,s1);
+// not(notB0, B[0]);
+// not(notB1, B[1]);
+// not(notB2, B[2]);
+// multiplexer m0(w[0],1'b1,notB0, B[0], notB0, s0, s1);
+// multiplexer m1(w[1],1'b1,notB1, B[1], notB1, s0, s1);
+// multiplexer m2(w[2],1'b1,notB2, B[2], notB2, s0, s1);   
+// full_adder f1(G[0], carry[0], A0, w[0], s0);
+// full_adder f2(G[1], carry[1], A1, w[1], carry[0]);
+// full_adder f3(G[2], finalcarry, A2, w[2], carry[1]);
+// endmodule
+module test_Arithmatic_Circuit ();
+//inputs
+reg [2:0] B;
+reg [2:0] A;
+reg s0;
+reg s1;
+// outputs
+wire [2:0] G;
+wire finalcarry;
+ArithmaticCircuit circut(G, finalcarry, B,A,s0,s1); 
+integer i;
+reg [2:0] val;
+initial
+begin
+$monitor($time, " G=%b, A=%b, B=%b, carry= %b, S1 = %b, S0 = %b ", G, A, B, finalcarry, s0,s1);
+val = 0; A[0]=val[0]; A[1]=val[1]; A[2]=val[2];
+B[0]=val[0]; B[1]=val[1]; B[2]=val[2];
+// for loop from 0 to 7 to change the value of A or B
+for (i = 1 ; i < 8 ;i++ ) 
+begin
+s0 = 0; s1= 0;
+#10 val = i; B[0]=0; B[1]=0; B[2]=0;
+A[0]=val[0]; A[1]=val[1]; A[2]=val[2];
+end
+for (i = 0 ; i < 8 ;i++ ) begin
+s0 = 0; s1 = 1;
+#10 val = i; A[0]=1; A[1]=0; A[2]=0;
+B[0]=val[0]; B[1]=val[1]; B[2]=val[2];
+end
+for (i = 0 ; i < 8 ;i++ ) begin
+s0 = 1; s1 = 0;
+#10 val = i; A[0]=0; A[1]=1; A[2]=0;
+B[0]=val[0]; B[1]=val[1]; B[2]=val[2];
+end
+for (i = 0 ; i < 8 ;i++ ) begin
+s0 = 1; s1 = 1;
+#10 val = i; A[0]=1; A[1]=1; A[2]=0;
+B[0]=val[0]; B[1]=val[1]; B[2]=val[2];
+end
+for (i = 0 ; i < 8 ;i++ ) begin
+s0 = 0; s1 = 1;
+#10 val = i; A[0]=1; A[1]=1; A[2]=1;
+B[0]=val[0]; B[1]=val[1]; B[2]=val[2];
+end
+for (i = 0 ; i < 8 ;i++ ) begin
+s0 = 1; s1= 0;
+#10 val = i; A[0]=0; A[1]=1; A[2]=1;
+B[0]=val[0]; B[1]=val[1]; B[2]=val[2];
+end
+$finish;
+end
+endmodule
+// iverilog -o ArthmaticCircuit ArthmaticCircuit.vl
+// vvp ArthmaticCircuit

@@ -1,0 +1,3 @@
+D:/MariamFCAI/1-ThirdYear/4-ComputerArchitecture/Assignments/ComputerArchitectureAssign2/C/cmake-build-debug/CMakeFiles/C.dir
+D:/MariamFCAI/1-ThirdYear/4-ComputerArchitecture/Assignments/ComputerArchitectureAssign2/C/cmake-build-debug/CMakeFiles/edit_cache.dir
+D:/MariamFCAI/1-ThirdYear/4-ComputerArchitecture/Assignments/ComputerArchitectureAssign2/C/cmake-build-debug/CMakeFiles/rebuild_cache.dir
